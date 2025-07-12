@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "850354719585",
+    "project_id": "adhd-app-7b2c3",
+    "storage_bucket": "adhd-app-7b2c3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:850354719585:android:3e702f9e166e6fd9209320",
+        "android_client_info": {
+          "package_name": "dev.keen.adhd_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBVFbmBBmX1fs2KQIh-bCTTS9utO5JW9eY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
