@@ -22,7 +22,7 @@ class FCMTokenManager {
 
     final token = await _fcm.getToken();
     if (token == null) {
-      debugPrint('[FCMTokenManager] Could not get FCM token for user $userId');
+      debugPrint('[FCMTokenManager] Could not get FCM token for user $userId.');
       return;
     }
     await _saveTokenToFirestore(userId, token);
