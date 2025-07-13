@@ -8,4 +8,4 @@
 adhd-app-firebase-adminsdk.json
 
 # Python bytecode cache
-app/__pycache__/
+__pycache__/
