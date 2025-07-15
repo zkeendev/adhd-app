@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/services/timezone_service.dart';
 import '../auth_providers.dart';
 import '../domain/auth_exceptions.dart';
 import '../domain/auth_repository.dart';
@@ -8,14 +9,15 @@ import '../../user_profile/user_profile.dart';
 import '../../user_profile/user_profile_providers.dart';
 import '../../user_profile/user_profile_service.dart';
 
-
 final authControllerProvider = AsyncNotifierProvider<AuthController, void>(() {
   return AuthController();
 });
 
 class AuthController extends AsyncNotifier<void> {
   AuthRepository get _authRepository => ref.read(authRepositoryProvider);
-  UserProfileService get _userProfileService => ref.read(userProfileServiceProvider);
+  UserProfileService get _userProfileService =>
+      ref.read(userProfileServiceProvider);
+  TimezoneService get _timezoneService => ref.read(timezoneServiceProvider);
 
   @override
   Future<void> build() async {
@@ -40,15 +42,21 @@ class AuthController extends AsyncNotifier<void> {
     state = const AsyncValue.loading();
     try {
       // Create user in Firebase Authentication
-      final userCredential =
-          await _authRepository.signUpWithEmailAndPassword(email, password);
+      final userCredential = await _authRepository.signUpWithEmailAndPassword(
+        email,
+        password,
+      );
 
       // If auth user creation is successful, create user profile in Firestore
       if (userCredential.user != null) {
         final firebaseUser = userCredential.user!;
+
+        final String localTimezone = await _timezoneService.getLocalTimezone();
+
         final newUserProfile = UserProfile(
           uid: firebaseUser.uid,
           email: firebaseUser.email,
+          timezone: localTimezone,
           // displayName will be null initially
           // createdAt will be set to server timestamp by UserProfile.toJson()
         );
