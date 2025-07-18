@@ -114,9 +114,22 @@ def _add_reminder_to_batch(
     parsed_utc: datetime,
     user_timezone: str
 ) -> None:
+    """
+    Adds a scheduled reminder to a Firestore batch write.
+
+    Args:
+        batch (firestore.WriteBatch): The Firestore batch to add the operation to.
+        user_id (str): The ID of the user setting the reminder.
+        reminder_content (str): The content/body of the reminder.
+        parsed_utc (datetime): The datetime the reminder is scheduled for (in UTC).
+        user_timezone (str): The user's local timezone.
+
+    Returns:
+        None
+    """
     db = batch._client
     doc_ref = db.collection("scheduled_notifications").document()
-    
+
     reminder = ScheduledNotification(
         user_id=user_id,
         title="Your Reminder",
@@ -126,5 +139,5 @@ def _add_reminder_to_batch(
         created_at=firestore.SERVER_TIMESTAMP,
         user_timezone=user_timezone,
     )
-    
+
     batch.set(doc_ref, reminder.model_dump(by_alias=True))
