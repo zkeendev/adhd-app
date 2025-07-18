@@ -23,10 +23,7 @@ def schedule_reminder(context: RunContextWrapper[AgentContext], datetime_phrase:
         batch = agent_context.firestore_batch
 
         # Parse and validate the date string
-        try:
-            parsed_utc = _parse_and_validate(datetime_phrase, user_timezone)
-        except DateParsingError as e:
-            return str(e)
+        parsed_utc = _parse_and_validate(datetime_phrase, user_timezone)
 
         # Add the reminder document to the Firestore batch
         _add_reminder_to_batch(
@@ -41,6 +38,9 @@ def schedule_reminder(context: RunContextWrapper[AgentContext], datetime_phrase:
         parsed_local = parsed_utc.astimezone(ZoneInfo(user_timezone))
         pretty_local = _format_pretty(parsed_local)
         return f"SUCCESS. Reminder was scheduled for {pretty_local} ({user_timezone}). Confirm the details with the user."
+    
+    except DateParsingError as e:
+        return str(e)
     
     except Exception as e:
         logger.error(f"Failed to schedule reminder for user {user_id}: {e}", exc_info=True)
