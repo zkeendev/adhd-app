@@ -1,5 +1,7 @@
+from dataclasses import dataclass
 from pydantic import BaseModel, Field
 from datetime import datetime
+from firebase_admin import firestore
 
 class ChatRequest(BaseModel):
     """The request model for a new chat message from the client."""
@@ -11,3 +13,10 @@ class ChatResponse(BaseModel):
     """The response model confirming the request was processed."""
     status: str = "success"
     message: str = "Request received and is being processed."
+
+@dataclass
+class AgentContext:
+    """A structured, type-safe context object for an agent run."""
+    user_id: str
+    user_timezone: str
+    firestore_batch: firestore.WriteBatch
