@@ -21,17 +21,3 @@ class AgentContext:
     user_id: str
     user_timezone: str
     firestore_batch: firestore.WriteBatch
-
-class ScheduledNotification(BaseModel):
-    """Data model for a document in the 'scheduled_notifications' collection."""
-    user_id: str = Field(alias="userId") # Use alias to map to Firestore's camelCase
-    title: str
-    body: str
-    scheduled_at: datetime = Field(alias="scheduledAt")
-    status: Literal["pending", "sent", "failed"]
-    created_at: datetime = Field(alias="createdAt")
-    user_timezone: str = Field(alias="userTimezone")
-    
-    class Config:
-        # Allow population by alias to make instantiation in Python code cleaner
-        populate_by_name = True

@@ -132,14 +132,14 @@ def _add_reminder_to_batch(
     db = batch._client
     doc_ref = db.collection("scheduled_notifications").document()
 
-    reminder = ScheduledNotification(
-        user_id=user_id,
-        title="Your Reminder",
-        body=reminder_content,
-        scheduled_at=parsed_utc,
-        status="pending",
-        created_at=firestore.SERVER_TIMESTAMP,
-        user_timezone=user_timezone,
-    )
+    reminder_data = {
+        "userId": user_id,
+        "title": "Your Reminder",
+        "body": reminder_content,
+        "scheduledAt": parsed_utc,
+        "status": "pending",
+        "createdAt": firestore.SERVER_TIMESTAMP,
+        "userTimezone": user_timezone,
+    }
 
-    batch.set(doc_ref, reminder.model_dump(by_alias=True))
+    batch.set(doc_ref, reminder_data)
