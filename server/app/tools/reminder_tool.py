@@ -53,6 +53,18 @@ def schedule_reminder(context: RunContextWrapper[AgentContext], datetime_phrase:
 # --- Private helper functions ----
     
 def _format_pretty(dt: datetime) -> str:
+    """
+    Formats a datetime object into a human-friendly string.
+
+    Example:
+        "Tuesday, July 16 at 3:45pm PDT"
+
+    Args:
+        dt (datetime): A timezone-aware datetime object.
+
+    Returns:
+        str: A formatted date string with weekday, month, time, and timezone abbreviation.
+    """
     weekday = dt.strftime("%A")
     month = dt.strftime("%B")
     day = dt.day
