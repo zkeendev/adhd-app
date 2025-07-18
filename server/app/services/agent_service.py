@@ -1,9 +1,11 @@
 import logging
 from functools import lru_cache
-
+from firebase_admin import firestore
 from agents import Agent, Runner, TResponseInputItem, set_default_openai_key
 
 from app.config import get_settings
+from ..tools.reminder_tool import schedule_reminder
+from ..models import AgentContext
 
 logger = logging.getLogger(__name__)
 
@@ -32,13 +34,16 @@ Interaction style:
 - Avoid giving direct advice unless asked. Instead, guide the user to find their own solutions.
 - Keep your responses concise and easy to digest. Use formatting like lists or bold text to improve readability.
 - Never diagnose or provide medical advice. If the user discusses medical topics, gently redirect them to consult a healthcare professional.
+
+Tool use:
+- When a user asks to be reminded of something, invoke the `schedule_reminder` tool.
 """
 
 class AgentService:
     """
     A service class to encapsulate the AI agent's logic and interaction.
     """
-    _agent: Agent
+    _agent: Agent[AgentContext]
 
     def __init__(self, api_key: str):
         """
@@ -47,32 +52,33 @@ class AgentService:
         Args:
             api_key: The OpenAI API key.
         """
-        # Configure the Agents SDK with the API key from our settings.
         set_default_openai_key(api_key)
         
-        self._agent = Agent(
+        self._agent = Agent[AgentContext](
             name="ADHD_Coach_Agent",
             instructions=_ADHD_COACH_INSTRUCTIONS,
-            # We use gpt-4o as it offers a great balance of intelligence and speed.
-            # This can be changed later.
             model="gpt-4o",
+            tools=[schedule_reminder],
         )
         logger.info("AI Agent initialized.")
 
-    async def get_response(self, conversation_history: list[TResponseInputItem]) -> str:
-        """
-        Gets a response from the AI agent based on the conversation history.
-
-        Args:
-            conversation_history: A list of previous messages in the conversation.
-
-        Returns:
-            The AI's response as a string.
-        """
+    async def get_response(
+        self,
+        conversation_history: list[TResponseInputItem],
+        user_id: str,
+        user_timezone: str,
+        batch: firestore.WriteBatch
+    ) -> str:
+        
         try:
+            agent_context = AgentContext(
+                user_id=user_id,
+                user_timezone=user_timezone,
+                firestore_batch=batch,
+            )
+
             logger.info(f"Running agent with {len(conversation_history)} messages in history.")
-            # Runner.run executes the agent loop and returns the final result.
-            result = await Runner.run(self._agent, conversation_history)
+            result = await Runner.run(self._agent, conversation_history, context=agent_context)
             
             final_output = result.final_output
             if isinstance(final_output, str):
