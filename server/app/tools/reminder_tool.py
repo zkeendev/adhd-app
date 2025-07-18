@@ -6,7 +6,7 @@ import dateparser
 from agents import RunContextWrapper, function_tool
 from firebase_admin import firestore
 
-from ..models import AgentContext, ScheduledNotification
+from ..models import AgentContext
 
 
 logger = logging.getLogger(__name__)
