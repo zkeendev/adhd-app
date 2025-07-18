@@ -9,9 +9,13 @@ from ..models import AgentContext, ScheduledNotification
 
 logger = logging.getLogger(__name__)
 
+# --- Custom exceptions ---
+
 class DateParsingError(ValueError):
     """Custom exception for date parsing and validation errors."""
     pass
+
+# --- Function tool definition ---
 
 @function_tool
 def schedule_reminder(context: RunContextWrapper[AgentContext], datetime_phrase: str, reminder_content: str) -> str:
@@ -46,6 +50,8 @@ def schedule_reminder(context: RunContextWrapper[AgentContext], datetime_phrase:
         logger.error(f"Failed to schedule reminder for user {user_id}: {e}", exc_info=True)
         return "Something went wrong while setting the reminder."
     
+# --- Private helper functions ----
+    
 def _format_pretty(dt: datetime) -> str:
     weekday = dt.strftime("%A")
     month = dt.strftime("%B")
@@ -58,19 +64,34 @@ def _format_pretty(dt: datetime) -> str:
     return f"{weekday}, {month} {day} at {hour}:{minute:02d}{ampm} {tz_abbrev}".strip()
 
 def _parse_and_validate(datetime_phrase: str, user_timezone: str) -> datetime:
-    settings = {
-        'TIMEZONE': user_timezone,
-        'TO_TIMEZONE': 'UTC',
-        'RETURN_AS_TIMEZONE_AWARE': True,
-        'PREFER_DATES_FROM': 'future',
-    }
-    parsed_utc = dateparser.parse(datetime_phrase, settings=settings)
+    """
+    Parses a natural language datetime phrase and validates that it's in the future.
 
-    if parsed_utc is None:
-        raise DateParsingError(f"Failed to parse the time '{datetime_phrase}'. Please be more specific.")
-    
+    Args:
+        datetime_phrase (str): A natural language expression like "tomorrow at 3pm".
+        user_timezone (str): The user's local timezone (e.g., "America/Los_Angeles").
+
+    Returns:
+        datetime: A timezone-aware UTC datetime object representing the parsed time.
+
+    Raises:
+        DateParsingError: If the phrase cannot be parsed or refers to a past time.
+    """
+    parsed_utc = dateparser.parse(
+        datetime_phrase,
+        settings={
+            'TIMEZONE': user_timezone,
+            'TO_TIMEZONE': 'UTC',
+            'RETURN_AS_TIMEZONE_AWARE': True,
+            'PREFER_DATES_FROM': 'future',
+        },
+    )
+
+    if not parsed_utc:
+        raise DateParsingError(f"Could not parse '{datetime_phrase}'. Try being more specific.")
+
     if parsed_utc <= datetime.now(timezone.utc):
-        raise DateParsingError("Reminders can only be set for future dates.")
+        raise DateParsingError("Date must be in the future.")
 
     return parsed_utc
 
