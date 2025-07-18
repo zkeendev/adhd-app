@@ -11,6 +11,7 @@ from ..repositories import ChatRepository
 from ..services.agent_service import AgentService, get_agent_service
 from ..services.notification_service import NotificationService, get_notification_service
 
+
 logger = logging.getLogger(__name__)
 
 class ChatService:
@@ -22,12 +23,7 @@ class ChatService:
     _agent_service: AgentService
     _notification_service: NotificationService
 
-    def __init__(
-            self,
-            chat_repo: ChatRepository,
-            agent_service: AgentService,
-            notification_service: NotificationService
-        ):
+    def __init__(self, chat_repo: ChatRepository, agent_service: AgentService,notification_service: NotificationService):
         self._chat_repo = chat_repo
         self._agent_service = agent_service
         self._notification_service = notification_service
