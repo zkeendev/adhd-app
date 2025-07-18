@@ -79,6 +79,23 @@ class ChatRepository:
             logger.error(f"Could not add messages for user '{user_id}': {e}", exc_info=True)
             raise
 
+    def get_user_profile(self, user_id: str) -> Dict[str, Any] | None:
+        """
+        Retrieves the user profile document from Firestore.
+        """
+        try:
+            doc_ref = self._db.collection(self._users_collection).document(user_id)
+            doc = doc_ref.get()
+            if doc.exists:
+                logger.info(f"Fetched profile for user: '{user_id}'.")
+                return doc.to_dict()
+            else:
+                logger.warning(f"User profile document not found for user '{user_id}'.")
+                return None
+        except Exception as e:
+            logger.error(f"Could not fetch user profile for user '{user_id}': {e}", exc_info=True)
+            raise
+
     def get_user_fcm_tokens(self, user_id: str) -> list[str]:
         try:
             user_doc_ref = self._db.collection(self._users_collection).document(user_id)
