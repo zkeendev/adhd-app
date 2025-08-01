@@ -13,10 +13,7 @@ class FirestoreChatRepository implements ChatRepository {
 
   // HELPER: Get the CollectionReference for a user's messages
   CollectionReference<Map<String, dynamic>> _userMessagesCollectionRef(String userId) {
-    return _firestore
-        .collection(_conversationsCollection)
-        .doc(userId)
-        .collection(_messagesSubcollection);
+    return _firestore.collection(_conversationsCollection).doc(userId).collection(_messagesSubcollection);
   }
 
   // HELPER: Transform a single DocumentSnapshot into a ChatMessage
