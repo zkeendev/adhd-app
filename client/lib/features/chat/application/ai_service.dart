@@ -3,8 +3,10 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
 
-import 'package:adhd_app/core/utils/http_error_handler.dart';
-import 'package:adhd_app/features/chat/domain/chat_message.dart';
+import '../domain/chat_message.dart';
+import '../../../core/constants/error_messages.dart';
+import '../../../core/utils/http_error_handler.dart';
+
 
 class AIServiceException implements Exception {
   final String message;
@@ -15,12 +17,11 @@ class AIServiceException implements Exception {
 
   @override
   String toString() {
-    String result =
-        'AIServiceException: $message${statusCode != null ? " (Status Code: $statusCode)" : ""}';
+    String res = 'AIServiceException: $message${statusCode != null ? " (Status Code: $statusCode)" : ""}';
     if (originalError != null) {
-      result += '\nOriginal Error: $originalError';
+      res += '\nOriginal Error: $originalError';
     }
-    return result;
+    return res;
   }
 }
 
@@ -38,15 +39,12 @@ class AIService {
       // Force refresh the token to ensure it's not expired.
       final String? token = await user.getIdToken(true);
       if (token == null) {
-        throw AIServiceException("Fetched ID token is null.");
+        throw AIServiceException(ErrorMessages.tokenNull);
       }
       return token;
     } catch (e) {
       print("[AIService:_getAuthToken] Error fetching Firebase ID token: $e");
-      throw AIServiceException(
-        "Could not retrieve authentication token.",
-        originalError: e,
-      );
+      throw AIServiceException(ErrorMessages.tokenNull, originalError: e);
     }
   }
 
@@ -81,31 +79,15 @@ class AIService {
 
       // A successful (2xx) response means the backend has accepted the request.
       print("[AIService:sendMessage] Backend successfully accepted the request for messageId: ${message.id}");
-    } on TimeoutException catch (e, s) {
-      print("[AIService:sendMessage] Request timed out: $e\n$s");
-      throw AIServiceException(
-        "The request to the AI service took too long. Please try again.",
-        originalError: e,
-      );
-    } on http.ClientException catch (e, s) {
-      print("[AIService:sendMessage] Network error: $e\n$s");
-      throw AIServiceException(
-        "Could not connect to the AI service. Please check your network connection.",
-        originalError: e,
-      );
+
+    } on TimeoutException catch (e) {
+      throw AIServiceException(ErrorMessages.requestTimeout, originalError: e);
+    } on http.ClientException catch (e) {
+      throw AIServiceException(ErrorMessages.network, originalError: e);
     } on NetworkException catch (e) {
-      print("[AIService:sendMessage] NetworkException from HttpErrorHandler: ${e.message}");
-      throw AIServiceException(
-        e.message,
-        statusCode: e.statusCode,
-        originalError: e.responseBody ?? e.toString(),
-      );
-    } catch (e, s) {
-      print("[AIService:sendMessage] Unknown error: $e\n$s");
-      throw AIServiceException(
-        "An unknown error occurred while contacting the AI service.",
-        originalError: e,
-      );
+      throw AIServiceException(e.message, statusCode: e.statusCode, originalError: e.responseBody ?? e.toString());
+    } catch (e) {
+      throw AIServiceException(ErrorMessages.unknown, originalError: e);
     }
   }
 }
