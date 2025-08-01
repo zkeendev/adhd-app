@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../domain/chat_message.dart';
+import '../../../core/constants/network_constants.dart';
 import '../../../core/constants/error_messages.dart';
 import '../../../core/utils/http_error_handler.dart';
 
@@ -36,27 +37,18 @@ class AIService {
 
   Future<String?> _getAuthToken(User user) async {
     try {
-      // Force refresh the token to ensure it's not expired.
       final String? token = await user.getIdToken(true);
-      if (token == null) {
-        throw AIServiceException(ErrorMessages.tokenNull);
-      }
+      if (token == null) throw AIServiceException(ErrorMessages.tokenNull);
       return token;
     } catch (e) {
-      print("[AIService:_getAuthToken] Error fetching Firebase ID token: $e");
       throw AIServiceException(ErrorMessages.tokenNull, originalError: e);
     }
   }
 
   /// Sends a user's message and its client-generated ID to the backend.
-  Future<void> sendMessage({
-    required User user,
-    required ChatMessage message,
-  }) async {
+  Future<void> sendMessage({required User user, required ChatMessage message}) async {
     final token = await _getAuthToken(user);
-
-    final String endpoint = '/chat';
-    final Uri url = Uri.parse('$_fastApiBaseUrl$endpoint');
+    final Uri url = Uri.parse('$_fastApiBaseUrl${NetworkConstants.chatEndpoint}');
 
     print("[AIService:sendMessage] Calling FastAPI: $url with messageId: '${message.id}'");
 
@@ -64,7 +56,7 @@ class AIService {
       final http.Response response = await http.post(
         url,
         headers: {
-          'Content-Type': 'application/json; charset=UTF-8',
+          'Content-Type': NetworkConstants.contentType,
           'Authorization': 'Bearer $token',
         },
         body: jsonEncode({
@@ -79,7 +71,6 @@ class AIService {
 
       // A successful (2xx) response means the backend has accepted the request.
       print("[AIService:sendMessage] Backend successfully accepted the request for messageId: ${message.id}");
-
     } on TimeoutException catch (e) {
       throw AIServiceException(ErrorMessages.requestTimeout, originalError: e);
     } on http.ClientException catch (e) {
